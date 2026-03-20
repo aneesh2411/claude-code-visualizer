@@ -3,6 +3,12 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --node-config: #6366f1;
+  --node-mcp: #06b6d4;
+  --node-agent: #8b5cf6;
+  --node-skill: #10b981;
+  --node-hook: #f59e0b;
+  --node-command: #ef4444;
 }
 
 @theme inline {

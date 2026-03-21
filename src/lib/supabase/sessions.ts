@@ -10,7 +10,7 @@
 // );
 
 import type { Session } from '../../types';
-import { supabaseServerClient } from './server';
+import { getSupabaseServerClient } from './server';
 
 const TABLE = 'sessions';
 
@@ -24,7 +24,7 @@ export async function createSession(
   name: string,
   configFiles: Record<string, string>,
 ): Promise<Session> {
-  const { data, error } = await supabaseServerClient
+  const { data, error } = await getSupabaseServerClient()
     .from(TABLE)
     .insert({ name, config_files: configFiles })
     .select()
@@ -35,7 +35,7 @@ export async function createSession(
 }
 
 export async function getSession(id: string): Promise<Session | null> {
-  const { data, error } = await supabaseServerClient
+  const { data, error } = await getSupabaseServerClient()
     .from(TABLE)
     .select()
     .eq('id', id)
@@ -49,7 +49,7 @@ export async function updateSession(
   id: string,
   updates: SessionUpdates,
 ): Promise<Session> {
-  const { data, error } = await supabaseServerClient
+  const { data, error } = await getSupabaseServerClient()
     .from(TABLE)
     .update({ ...updates, updated_at: new Date().toISOString() })
     .eq('id', id)
@@ -61,7 +61,7 @@ export async function updateSession(
 }
 
 export async function listSessions(): Promise<Session[]> {
-  const { data, error } = await supabaseServerClient
+  const { data, error } = await getSupabaseServerClient()
     .from(TABLE)
     .select()
     .order('created_at', { ascending: false });
@@ -71,7 +71,7 @@ export async function listSessions(): Promise<Session[]> {
 }
 
 export async function deleteSession(id: string): Promise<void> {
-  const { error } = await supabaseServerClient
+  const { error } = await getSupabaseServerClient()
     .from(TABLE)
     .delete()
     .eq('id', id);

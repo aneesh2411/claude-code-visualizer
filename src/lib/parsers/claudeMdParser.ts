@@ -91,6 +91,39 @@ function extractSkills(content: string): ConfigNode[] {
   return nodes;
 }
 
+function extractCommands(content: string): ConfigNode[] {
+  const nodes: ConfigNode[] = [];
+  const seen = new Set<string>();
+
+  // Match items in a "## Commands" section
+  const cmdSectionRegex = /##\s+Commands?\b([\s\S]*?)(?=\n##\s|\n#\s|$)/i;
+  const cmdSection = content.match(cmdSectionRegex);
+  if (cmdSection) {
+    const section = cmdSection[1];
+    const listItems = section.match(/[-*]\s+`?\/([a-zA-Z0-9_\-]+)`?/g) ?? [];
+    for (const item of listItems) {
+      const name = item.replace(/[-*]\s+`?\//, '').replace(/`$/, '').trim();
+      if (name && !seen.has(name)) {
+        seen.add(name);
+        nodes.push({ id: makeId('command', name), type: 'command', label: `/${name}`, data: { source: 'CLAUDE.md' } });
+      }
+    }
+  }
+
+  // Match inline /command references (e.g. `/commit`, `/review-pr`)
+  const inlineRegex = /`(\/[a-zA-Z][a-zA-Z0-9_\-]*)`/g;
+  let match: RegExpExecArray | null;
+  while ((match = inlineRegex.exec(content)) !== null) {
+    const name = match[1].slice(1); // strip leading /
+    if (name && !seen.has(name)) {
+      seen.add(name);
+      nodes.push({ id: makeId('command', name), type: 'command', label: `/${name}`, data: { source: 'CLAUDE.md' } });
+    }
+  }
+
+  return nodes;
+}
+
 function extractHooks(content: string): ConfigNode[] {
   const nodes: ConfigNode[] = [];
   const seen = new Set<string>();
@@ -130,8 +163,9 @@ export function parseClaudeMd(content: string): ParsedConfig {
     const agentNodes = extractAgents(body);
     const skillNodes = extractSkills(body);
     const hookNodes = extractHooks(body);
+    const commandNodes = extractCommands(body);
 
-    const childNodes = [...mcpNodes, ...agentNodes, ...skillNodes, ...hookNodes];
+    const childNodes = [...mcpNodes, ...agentNodes, ...skillNodes, ...hookNodes, ...commandNodes];
     const edges = buildEdges(rootNode.id, childNodes);
 
     return {

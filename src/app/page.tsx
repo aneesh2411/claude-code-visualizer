@@ -41,9 +41,9 @@ export default function HomePage() {
         const body = await res.json().catch(() => ({}));
         throw new Error((body as { error?: string }).error ?? 'Parse failed');
       }
-      const data = (await res.json()) as { configs: ParsedConfig[] };
-      setParsedConfigs(data.configs);
-      setFlowData(transformToFlowNodes(data.configs));
+      const data = (await res.json()) as { data: ParsedConfig[] };
+      setParsedConfigs(data.data);
+      setFlowData(transformToFlowNodes(data.data));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to parse config');
     } finally {
@@ -58,14 +58,14 @@ export default function HomePage() {
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ configs: parsedConfigs }),
+        body: JSON.stringify({ parsedConfigs }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error((body as { error?: string }).error ?? 'Analyze failed');
       }
-      const data = (await res.json()) as { suggestions: Suggestion[] };
-      setSuggestions(data.suggestions);
+      const data = (await res.json()) as { data: { suggestions: Suggestion[] } };
+      setSuggestions(data.data.suggestions);
       setSidebarOpen(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to analyze config');
@@ -77,14 +77,15 @@ export default function HomePage() {
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-3 shrink-0">
-        <h1 className="text-lg font-semibold text-gray-900">
-          Claude Code Visualizer
-        </h1>
+        <div className="flex items-center gap-2">
+          <span className="text-lg">🗺️</span>
+          <h1 className="text-base font-semibold text-gray-900">Claude Code Visualizer</h1>
+        </div>
         <button
-          className="text-sm text-gray-500 hover:text-gray-700"
+          className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
           onClick={() => setSidebarOpen((v) => !v)}
         >
-          {sidebarOpen ? 'Hide Suggestions' : 'Show Suggestions'}
+          {sidebarOpen ? 'Hide suggestions' : 'Show suggestions'}
         </button>
       </header>
 
@@ -101,16 +102,32 @@ export default function HomePage() {
       )}
 
       <div className="flex flex-1 overflow-hidden">
-        <aside className="w-[40%] max-w-sm border-r border-gray-200 bg-white flex flex-col gap-4 p-4 overflow-y-auto shrink-0">
+        <aside className="w-[340px] border-r border-gray-200 bg-white flex flex-col gap-4 p-4 overflow-y-auto shrink-0">
           <UploadPanel onFilesReady={handleFilesReady} loading={parseLoading} />
           <FileList files={uploadedFiles} />
+
           {parsedConfigs.length > 0 && (
             <button
               disabled={analyzeLoading}
               onClick={handleAnalyze}
-              className="w-full rounded-lg border border-indigo-600 px-4 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                background: analyzeLoading
+                  ? '#4338ca'
+                  : 'linear-gradient(135deg, #4f46e5, #6d28d9)',
+                boxShadow: analyzeLoading ? 'none' : '0 2px 8px #4f46e540',
+              }}
             >
-              {analyzeLoading ? 'Analyzing...' : 'Analyze with AI'}
+              {analyzeLoading ? (
+                <>
+                  <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Analyzing…
+                </>
+              ) : (
+                <>
+                  ✦ Analyze with AI
+                </>
+              )}
             </button>
           )}
         </aside>
@@ -125,7 +142,9 @@ export default function HomePage() {
 
         {sidebarOpen && (
           <aside className="w-80 border-l border-gray-200 bg-white flex flex-col p-4 overflow-y-auto shrink-0">
-            <h2 className="text-sm font-semibold text-gray-700 mb-3">AI Suggestions</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">
+              AI Suggestions
+            </h2>
             <SuggestionsPanel
               suggestions={suggestions}
               loading={analyzeLoading}

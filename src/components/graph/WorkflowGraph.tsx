@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, type ComponentType } from 'react';
+import { useState, useCallback, useMemo, useEffect, type ComponentType } from 'react';
 import {
   ReactFlow,
   Background,
@@ -37,12 +37,26 @@ interface WorkflowGraphProps {
   nodes: Node[];
   edges: Edge[];
   loading?: boolean;
+  highlightedNodeIds?: string[];
 }
 
-function GraphInner({ nodes, edges, loading }: WorkflowGraphProps) {
+function GraphInner({ nodes, edges, loading, highlightedNodeIds }: WorkflowGraphProps) {
   const [selectedNode, setSelectedNode] = useState<Node<Record<string, unknown>> | null>(null);
 
-  const memoNodes = useMemo(() => nodes, [nodes]);
+  const highlightedSet = useMemo(
+    () => new Set(highlightedNodeIds ?? []),
+    [highlightedNodeIds],
+  );
+
+  const memoNodes = useMemo(
+    () =>
+      nodes.map((n) => ({
+        ...n,
+        data: { ...n.data, highlighted: highlightedSet.has(n.id) },
+      })),
+    [nodes, highlightedSet],
+  );
+
   const memoEdges = useMemo(() => edges, [edges]);
 
   const handleNodeClick = useCallback<NodeMouseHandler>((_, node) => {
@@ -51,6 +65,14 @@ function GraphInner({ nodes, edges, loading }: WorkflowGraphProps) {
 
   const handlePaneClick = useCallback(() => {
     setSelectedNode(null);
+  }, []);
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setSelectedNode(null);
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   if (loading) {

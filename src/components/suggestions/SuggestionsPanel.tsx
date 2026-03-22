@@ -6,6 +6,7 @@ import SuggestionCard from './SuggestionCard';
 interface SuggestionsPanelProps {
   suggestions: Suggestion[];
   loading?: boolean;
+  onHighlight?: (ids: string[]) => void;
 }
 
 const PRIORITY_ORDER: Suggestion['priority'][] = ['critical', 'high', 'medium', 'low'];
@@ -116,7 +117,7 @@ function TopIssues({ issues }: { issues: Suggestion[] }) {
   );
 }
 
-export default function SuggestionsPanel({ suggestions, loading }: SuggestionsPanelProps) {
+export default function SuggestionsPanel({ suggestions, loading, onHighlight }: SuggestionsPanelProps) {
   if (loading) return <LoadingSkeleton />;
 
   if (suggestions.length === 0) {
@@ -150,7 +151,7 @@ export default function SuggestionsPanel({ suggestions, loading }: SuggestionsPa
               </h3>
               <div className="flex flex-col gap-2">
                 {items.map((s) => (
-                  <SuggestionCard key={s.id} suggestion={s} />
+                  <SuggestionCard key={s.id} suggestion={s} onHighlight={onHighlight} />
                 ))}
               </div>
             </section>

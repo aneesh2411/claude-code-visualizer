@@ -35,10 +35,14 @@ function summarizeConfig(config: ParsedConfig): string {
     .map((n) => `  - [${n.type}] id="${n.id}" label="${n.label}"`)
     .join('\n');
 
+  const rawSnippet = config.rawContent.length > 0
+    ? `\nRaw content (first 2000 chars):\n\`\`\`\n${config.rawContent.slice(0, 2000)}\n\`\`\``
+    : '';
+
   return `File: ${config.sourceFile}
 Node counts: ${JSON.stringify(countByType)}
 Nodes:
-${nodeList}`;
+${nodeList}${rawSnippet}`;
 }
 
 export function buildUserPrompt(parsedConfigs: ParsedConfig[]): string {

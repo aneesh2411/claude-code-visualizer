@@ -22,10 +22,20 @@ export default function HomePage() {
     edges: [],
   });
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [highlightedNodeIds, setHighlightedNodeIds] = useState<string[]>([]);
   const [parseLoading, setParseLoading] = useState(false);
   const [analyzeLoading, setAnalyzeLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  function handleClear() {
+    setUploadedFiles([]);
+    setParsedConfigs([]);
+    setFlowData({ nodes: [], edges: [] });
+    setSuggestions([]);
+    setHighlightedNodeIds([]);
+    setError(null);
+  }
 
   async function handleFilesReady(files: UploadedFile[]) {
     setUploadedFiles(files);
@@ -74,6 +84,8 @@ export default function HomePage() {
     }
   }
 
+  const hasContent = uploadedFiles.length > 0 || suggestions.length > 0;
+
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-3 shrink-0">
@@ -103,6 +115,17 @@ export default function HomePage() {
 
       <div className="flex flex-1 overflow-hidden">
         <aside className="w-[340px] border-r border-gray-200 bg-white flex flex-col gap-4 p-4 overflow-y-auto shrink-0">
+          {hasContent && (
+            <div className="flex justify-end">
+              <button
+                onClick={handleClear}
+                className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+              >
+                Clear
+              </button>
+            </div>
+          )}
+
           <UploadPanel onFilesReady={handleFilesReady} loading={parseLoading} />
           <FileList files={uploadedFiles} />
 
@@ -137,6 +160,7 @@ export default function HomePage() {
             nodes={flowData.nodes}
             edges={flowData.edges}
             loading={parseLoading}
+            highlightedNodeIds={highlightedNodeIds}
           />
         </main>
 
@@ -148,6 +172,7 @@ export default function HomePage() {
             <SuggestionsPanel
               suggestions={suggestions}
               loading={analyzeLoading}
+              onHighlight={setHighlightedNodeIds}
             />
           </aside>
         )}
